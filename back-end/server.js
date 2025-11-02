@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import 'dotenv/config'
-import mongoose  from './config/db.js'
+import connectDB  from './config/db.js'
 import connectCloudinary from './config/cloudinary.js'
 import userRouter from './routes/user.Routes.js'
 import productRouter from './routes/product.Routes.js'
@@ -19,6 +19,7 @@ app.use(
   cors({})
 );
 // api endpoints 
+await connectDB();
 app.use('/api/user',userRouter);
 app.use('/api/product',productRouter);
 app.use('/api/cart',cartRouter);
