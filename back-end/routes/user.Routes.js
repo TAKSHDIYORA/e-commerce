@@ -1,6 +1,6 @@
 import express from 'express';
 import { loginUser,registerUser, adminLogin } from '../controllers/userController.js';
-import adminAuth, { IpAuth } from '../middleware/adminAuth.js';
+import  { IpAuth } from '../middleware/adminAuth.js';
 
 
 
