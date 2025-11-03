@@ -3,10 +3,15 @@ import jwt from "jsonwebtoken"
 const adminAuth = async (req,res,next) =>{
     try{
         // console.log(req.headers);
+        const forwarded = req.headers["x-forwarded-for"];
         const allowedIPs = process.env.WHITELIST.split(',');
         console.log(allowedIPs);
-        
-   const clientIP = req.ip.replace("::ffff:", "");  // remove IPv6 prefix
+        let clientIP = "";
+  if (typeof forwarded === "string") {
+    clientIP = forwarded.split(",")[0].trim(); // real IP
+  } else {
+    clientIP = req.socket.remoteAddress || "";
+  } // remove IPv6 prefix
   console.log(clientIP);
   console.log(req.socket.remoteAddress);
   

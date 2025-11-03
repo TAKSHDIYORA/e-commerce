@@ -14,6 +14,7 @@ const app = express()
 const PORT = process.env.PORT || 4000;
 connectCloudinary();
 //middlewares
+app.set("trust proxy",true);
 app.use(express.json());
 app.use(
   cors({})
