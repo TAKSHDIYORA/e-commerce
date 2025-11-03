@@ -3,17 +3,25 @@ import jwt from "jsonwebtoken"
 const adminAuth = async (req,res,next) =>{
     try{
         // console.log(req.headers);
+        const allowedIPs = process.env.WHITELIST.split(',');
+        console.log(allowedIPs);
         
-           const {token} = req.headers
-           if(!token){
-            return res.json({"status":false,"message":"Not Authorized Login Again"})
-           }
-           const token_decode = jwt.verify(token,process.env.JWT_SECRET);
-           if(token_decode!== process.env.ADMIN_EMAIL + process.env.ADMIN_PASSWORD){
-                 
-            return res.json({"status":false,"message":"Not Authorized Login Again"})
-           
-           }
+   const clientIP = req.ip.replace("::ffff:", "");  // remove IPv6 prefix
+  console.log(clientIP);
+  console.log(req.socket.remoteAddress);
+  
+  
+  if (!allowedIPs.includes(clientIP)) {
+    res.status(403).json({ success:false,message: "Access denied" });
+    return ;
+  } else {
+   
+     console.log("ip is valid");
+    
+  }
+
+        
+         
            next();
         }catch(err){
              console.log(err);
