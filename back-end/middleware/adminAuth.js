@@ -12,7 +12,7 @@ const adminAuth = async (req,res,next) =>{
   
   
   if (!allowedIPs.includes(clientIP)) {
-    res.status(403).json({ success:false,message: "Access denied" });
+    res.json({ status:false,message: "Access denied" });
     return ;
   } else {
    
