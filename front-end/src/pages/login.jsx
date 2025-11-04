@@ -21,14 +21,16 @@ const [email,setEmail] = useState('');
                  
               const response = await axios.post(backendUrl + '/api/user/register',{name,email,password});
             
-              if(response.data.status){
-        setToken(response.data.token)
-                 localStorage.setItem('token',response.data.token);
-                 localStorage.setItem('email',email);
-                await fetchCartFromDB(email);
-
-                                navigate('/');
+              if(response.data.success){
+                localStorage.setItem('email',email);
+                setToken(response.data.token)
+                navigate('/verify-email');
+        
+               
+                               
               }else{
+                console.log(response.data.message);
+                
                 toast.error(response.data.message);
               }
               
@@ -63,12 +65,12 @@ const [email,setEmail] = useState('');
          
    }
 
-   useEffect(()=>{
-     if(token){
-      navigate('/');
-     }       
+  //  useEffect(()=>{
+  //    if(token){
+  //     navigate('/');
+  //    }       
 
-   },[token])
+  //  },[token])
 
 
   return (

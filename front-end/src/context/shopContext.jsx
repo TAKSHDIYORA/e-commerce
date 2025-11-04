@@ -16,6 +16,7 @@ const ShopContextProvider =
     const [cartItems,setCartItems] = useState({});
     const [products,setProducts] = useState([]);
     const [token,setToken] = useState('');
+    const [verEmail,setVerEmail] = useState(false);
     const navigate = useNavigate();
 
      useEffect(() => {
@@ -173,6 +174,24 @@ const fetchCartFromDB = async (email) => {
 
 
 
+const logOut =  async() =>{
+    // const email = localStorage.getItem("email");
+   await saveCartToDB();
+    
+     localStorage.removeItem('token');
+     localStorage.removeItem('cartItems');
+      localStorage.removeItem('email');
+     
+          
+
+     setToken('');
+     setCartItems({});
+    
+ setTimeout(() => navigate('/login'), 0);
+  }
+
+
+
 
     const value = {
         products,currency,delivery_fee,
@@ -185,7 +204,8 @@ const fetchCartFromDB = async (email) => {
         backendUrl,
         setToken,token,
         fetchCartFromDB,
-        saveCartToDB
+        saveCartToDB,
+        verEmail,setVerEmail,logOut
     }
     return (
         <ShopContext.Provider value={value}>
