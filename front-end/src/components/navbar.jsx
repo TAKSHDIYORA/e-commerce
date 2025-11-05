@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { assets } from '../assets/frontend_assets/assets'
 import { Link, NavLink } from 'react-router-dom'
 import { ShopContext } from '../context/shopContext';
@@ -7,8 +7,13 @@ const Navbar = () => {
 
   const [visible,setVisible] = useState(false);
   const {setShowSearch,getCartCount, navigate,token,setToken,setCartItems,saveCartToDB,logOut } = useContext(ShopContext);
+  const [status,setStatus] = useState("sign-in");
   
-  
+  useEffect(()=>{
+       if(token){
+          setStatus("log-Out");
+       }
+  },[token])
   
   return (
     <div className='flex items-center justify-between py-5 font-medium'>
@@ -46,7 +51,7 @@ const Navbar = () => {
             <Link to='/login'> <p onClick={async (e) => {
     e.preventDefault(); // stops Link from navigating too early
     await logOut();
-  }} className='cursor-pointer hover:text-black'>Logout</p></Link>
+  }} className='cursor-pointer hover:text-black'>{status}</p></Link>
             </div>
           </div>
 

@@ -19,8 +19,7 @@ import Verify from './pages/verify'
 import VerifyEmail from './pages/verifyEmail'
 import { ShopContext } from './context/shopContext'
 const App = () => {
-  const {token} = useContext(ShopContext);
-  if(token){
+ 
   return (
     <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
       <ToastContainer/>
@@ -44,17 +43,7 @@ const App = () => {
 
     </div>
   )
-}else{
-
-  return (
- <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
-      <ToastContainer/>
-     <Login />
-
-    </div>
-  )
-
 }
-}
+
 
 export default App;
