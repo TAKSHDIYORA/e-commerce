@@ -1,4 +1,11 @@
-import cartModel from "../models/cartModel.js";
+// import cartModel from "../models/cartModel.js";
+// import productCartModel from "../models/productCartModel.js";
+import Cart from "../models/cartModel.js";
+import ProductCart from "../models/productCartModel.js";
+import CartItem from "../models/cartItemModel.js";
+import Product from "../models/productModel.js"; 
+
+
 import userModel from "../models/userModel.js";
 const  fetchUser = async (req,res) =>{
   try{ 
@@ -63,51 +70,166 @@ console.log("📩 Request received at /api/cart/save");
 };
 
 
-const addCart = async (req,res) =>{
-     try{
-         const {userId,products} = req.body;    
-     const newCart = new cartModel({
-          userId,
-          products
-     })
-     const cart = await newCart.save();
-     res.json({"success":true,"message":"new cart created"});
 
-     }catch(err){
-          console.log(err);
-          res.json({"success":false,"message":err.message});
-          
-     }
-}
-const getData = async(req,res)=>{
-  try{
-     const cart = await cartModel.find({});
-     if(!cart){
-      return res.json({"success":false,"message":"there is no cart"});
-     }
-     res.json({"success":true,"data":cart,"message":"cart data showed successfully"});
 
-  }catch(err){
-    console.log(err);
-    res.json({"success":false,"message":err.message});
-    
 
+
+
+
+
+const addToCart = async (req, res) => {
+  try {
+    const { userId, products } = req.body;
+
+    // 1️⃣ Check if cart exists for this user
+    let findCart = await Cart.findOne({ userId });
+
+    // If no cart exists, create a new one
+    if (!findCart) {
+      findCart = await Cart.create({ userId });
+    }
+
+    // 2️⃣ Loop through all products being added
+    for (const product of products) {
+      const { productId, items } = product; // items = [{ size, quantity }]
+
+      // 3️⃣ Check if product already exists in user's cart
+      let cartProduct = await ProductCart.findOne({
+        cartId: findCart._id,
+        productId,
+      });
+
+      // If product not in cart, create a new ProductCart record
+      if (!cartProduct) {
+        cartProduct = await ProductCart.create({
+          cartId: findCart._id,
+          productId,
+        });
+      }
+
+      // 4️⃣ For each size in items array
+      for (const item of items) {
+        const { size, quantity } = item;
+
+        // Check if this size already exists for that product in the cart
+        let cartItem = await CartItem.findOne({
+          cartProductId: cartProduct._id,
+          size,
+        });
+
+        if (cartItem) {
+          // If size exists → increase quantity
+          cartItem.quantity += quantity;
+          await cartItem.save();
+        } else {
+          // Else → create new size entry
+          await CartItem.create({
+            cartProductId: cartProduct._id,
+            size,
+            quantity,
+          });
+        }
+      }
+    }
+
+    // ✅ Response
+    res.status(200).json({
+      success: true,
+      message: "Items added to cart successfully",
+    });
+
+  } catch (err) {
+    console.error("❌ Add to Cart Error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
-}
+};
 
 
-const getDataOfUser = async(req,res) =>{
-  try{
-     const {userId} = req.body;
-     const cart = await cartModel.find(userId);
+const getUserCart = async (req, res) => {
+  try {
+    const { userId, page = 1, limit = 5 } = req.body;
 
-     res.json({"success":true,"data":cart,"message":"cart data showed successfully"});
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
 
-  }catch(err){
-      console.log(err);
-      res.json({"success":false,"message":err.message});
-      
+    // 1️⃣ Find the user’s main cart
+    const userCart = await Cart.findOne({ userId });
+    if (!userCart) {
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found for this user",
+      });
+    }
+
+    // 2️⃣ Fetch all products for that cart with pagination
+    const totalProducts = await ProductCart.countDocuments({
+      cartId: userCart._id,
+    });
+
+    const skip = (page - 1) * limit;
+
+    const productCarts = await ProductCart.find({ cartId: userCart._id })
+      .skip(skip)
+      .limit(Number(limit))
+      .populate({
+        path: "productId",
+        model: "product",
+        select: "name price image description", // Adjust fields as needed
+      })
+      .lean();
+
+    // 3️⃣ For each productCart, fetch its sizes and quantities
+    const cartData = [];
+    for (const prod of productCarts) {
+      const items = await CartItem.find({
+        cartProductId: prod._id,
+      }).select("size quantity -_id");
+  for(const item of items){
+      cartData.push({
+        productId: prod.productId._id,
+        name: prod.productId.name,
+        price: prod.productId.price,
+        image: prod.productId.image,
+        description: prod.productId.description,
+        item, // [{ size, quantity }]
+      });
+    }
   }
-}
 
-export {fetchUser,saveCart,addCart,getData,getDataOfUser};
+    // 4️⃣ Return structured and paginated response
+    res.status(200).json({
+      success: true,
+      message: "User cart fetched successfully",
+      totalProducts,
+      currentPage: Number(page),
+      totalPages: Math.ceil(totalProducts / limit),
+      data: cartData,
+    });
+  } catch (err) {
+    console.error("❌ Error fetching user cart:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: err.message,
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+export {fetchUser,saveCart,addToCart,getUserCart};
