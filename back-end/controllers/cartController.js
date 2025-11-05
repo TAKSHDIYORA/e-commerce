@@ -1,3 +1,4 @@
+import cartModel from "../models/cartModel.js";
 import userModel from "../models/userModel.js";
 const  fetchUser = async (req,res) =>{
   try{ 
@@ -60,4 +61,53 @@ console.log("📩 Request received at /api/cart/save");
     });
   }
 };
-export {fetchUser,saveCart};
+
+
+const addCart = async (req,res) =>{
+     try{
+         const {userId,products} = req.body;    
+     const newCart = new cartModel({
+          userId,
+          products
+     })
+     const cart = await newCart.save();
+     res.json({"success":true,"message":"new cart created"});
+
+     }catch(err){
+          console.log(err);
+          res.json({"success":false,"message":err.message});
+          
+     }
+}
+const getData = async(req,res)=>{
+  try{
+     const cart = await cartModel.find({});
+     if(!cart){
+      return res.json({"success":false,"message":"there is no cart"});
+     }
+     res.json({"success":true,"data":cart,"message":"cart data showed successfully"});
+
+  }catch(err){
+    console.log(err);
+    res.json({"success":false,"message":err.message});
+    
+
+  }
+}
+
+
+const getDataOfUser = async(req,res) =>{
+  try{
+     const {userId} = req.body;
+     const cart = await cartModel.find(userId);
+
+     res.json({"success":true,"data":cart,"message":"cart data showed successfully"});
+
+  }catch(err){
+      console.log(err);
+      res.json({"success":false,"message":err.message});
+      
+  }
+}
+
+export {fetchUser,saveCart,addCart,getData,getDataOfUser};
