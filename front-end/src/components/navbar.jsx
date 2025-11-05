@@ -6,8 +6,8 @@ import { ShopContext } from '../context/shopContext';
 const Navbar = () => {
 
   const [visible,setVisible] = useState(false);
-  const {setShowSearch,getCartCount, navigate,token,setToken,setCartItems,saveCartToDB,logOut } = useContext(ShopContext);
-  const [status,setStatus] = useState("sign-in");
+  const {setShowSearch,getCartCount, navigate,token,setToken,setCartItems,saveCartToDB,logOut,status,setStatus } = useContext(ShopContext);
+  // const [status,setStatus] = useState("sign-in");
   
   useEffect(()=>{
        if(token){

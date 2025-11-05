@@ -17,6 +17,7 @@ const ShopContextProvider =
     const [products,setProducts] = useState([]);
     const [token,setToken] = useState('');
     const [verEmail,setVerEmail] = useState(false);
+     const [status,setStatus] = useState("sign-in");
     const navigate = useNavigate();
 
      useEffect(() => {
@@ -124,14 +125,18 @@ useEffect(()=>{
 const fetchCartFromDB = async (email) => {
     try {
             const token = localStorage.getItem('token');
+            const prevCartItems = JSON.parse(localStorage.getItem('cartItems'));
 
       const res = await axios.post(backendUrl+`/api/cart/${encodeURIComponent(email)}`,{},{headers:{token:token,},});
       // console.log(res);
       if (res.data.status && res.data.cartData) {
-        setCartItems(res.data.cartData);
-        console.log(res.data.cartData);
+
+        const cartDataDb = res.data.cartData;
+        const mergedData = {...prevCartItems,...cartDataDb};
+        setCartItems(mergedData);
+        console.log(mergedData);
         
-        localStorage.setItem("cartItems", JSON.stringify(res.data.cartData));
+        localStorage.setItem("cartItems", JSON.stringify(mergedData));
       } else {
         setCartItems({});
       }
@@ -176,16 +181,22 @@ const fetchCartFromDB = async (email) => {
 
 const logOut =  async() =>{
     // const email = localStorage.getItem("email");
+if(status ==='log-Out'){
+    localStorage.removeItem('cartItems');
+     setCartItems({});
+     setStatus("sign-in")
+}
+
    await saveCartToDB();
     
      localStorage.removeItem('token');
-     localStorage.removeItem('cartItems');
+     
       localStorage.removeItem('email');
      
           
 
-     setToken('');
-     setCartItems({});
+     setToken(false);
+    
     
  setTimeout(() => navigate('/login'), 0);
   }
@@ -205,7 +216,8 @@ const logOut =  async() =>{
         setToken,token,
         fetchCartFromDB,
         saveCartToDB,
-        verEmail,setVerEmail,logOut
+        verEmail,setVerEmail,logOut,
+        status,setStatus
     }
     return (
         <ShopContext.Provider value={value}>
