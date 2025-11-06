@@ -8,18 +8,22 @@ import productRouter from './routes/product.Routes.js'
 import cartRouter from './routes/cart.Routes.js'
 import orderRouter from './routes/order.Routes.js'
 import customerReviewRouter from './routes/customerReview.Routes.js'
+import path from "path";
+import notificationRouter from './routes/notification.Routes.js'
 
 // App Config
 
 const app = express()
 const PORT = process.env.PORT || 4000;
 connectCloudinary();
+const __dirname = path.resolve();
 //middlewares
 app.set("trust proxy",true);
 app.use(express.json());
 app.use(
   cors({})
 );
+app.use("/invoices", express.static(path.join(__dirname, "invoices")));
 // api endpoints 
 await connectDB();
 app.use('/api/user',userRouter);
@@ -27,6 +31,8 @@ app.use('/api/product',productRouter);
 app.use('/api/cart',cartRouter);
 app.use('/api/order',orderRouter);
 app.use('/api/customerReview',customerReviewRouter);
+
+app.use('/api/notification',notificationRouter);
 app.get('/',(req,res)=>{
      res.send("API WORKING")
 });
