@@ -18,7 +18,8 @@ const symbolCurr = '₹';
 //gateway initializer
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const backendUrl = process.env.VITE_BACKEND_URL;
-
+const upload_Id = process.env.UPLOAD_IO_ID;
+const upload_API_key = process.env.UPLOAD_API_KEY;
 
 
 //Placing orders using COD method
@@ -287,11 +288,11 @@ const updateStatus = async (req, res) => {
 
       // ✅ Upload to Upload.io
       const uploadResponse = await fetch(
-        `https://api.upload.io/v2/accounts/G22nj2X/uploads/binary`,
+        `https://api.upload.io/v2/accounts/${upload_Id}/uploads/binary`,
         {
           method: "POST",
           headers: {
-            Authorization: "Bearer public_G22nj2X6EghU63soGwJ6QiCwdcPk",
+            Authorization: `Bearer ${upload_API_key}`,
             "Content-Type": "application/pdf",
           },
           body: pdfBuffer,
