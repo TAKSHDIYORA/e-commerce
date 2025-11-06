@@ -111,6 +111,13 @@ a.active hr {
   transform: scale(1.05);
 }
 
+
+@media (max-width: 640px) {
+  .mobile-sidebar-open body {
+    overflow: hidden;
+  }
+}
+
 /* Product card hover effects */
 .product-card {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);

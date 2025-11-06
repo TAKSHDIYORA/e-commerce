@@ -271,7 +271,7 @@ const Navbar = () => {
 
       {/* Mobile Sidebar */}
       <div
-        className={`absolute top-0 right-0 bottom-0 overflow-hidden transition-all ${visible ? "w-full" : "w-0"} `}
+        className={`fixed top-0 right-0 bottom-0 overflow-hidden transition-all ${visible ? "w-full" : "w-0"} `}
         style={{ backgroundColor: "var(--bg-primary)" }}
       >
         <div className="flex flex-col" style={{ color: "var(--text-secondary)" }}>
