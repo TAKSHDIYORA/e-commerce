@@ -1,29 +1,84 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import React, { useContext, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { ShopContext } from '../context/shopContext';
 import { assets } from '../assets/frontend_assets/assets';
 import RelatedProducts from '../components/relatedProducts';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Product = () => {
   const { productId } = useParams();
-  const { products, currency ,addToCart } = useContext(ShopContext);
-  const [productData, setProductData] = useState(false);
+  const { products, currency, addToCart, backendUrl, token } = useContext(ShopContext);
+  
+  const [productData, setProductData] = useState(null);
   const [image, setImage] = useState('');
   const [size, setSize] = useState('');
+  const [reviews, setReviews] = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
+  
+  // Review form states
+  const [userName, setUserName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [userReview, setUserReview] = useState('');
+  const [userStar, setUserStar] = useState(0);
 
-  const fetchProductData = async () => {
-    products.map((item) => {
-      if (item._id === productId) {
-        setProductData(item);
-        setImage(item.image[0]);
-        return null;
+  // Fetch product data
+  useEffect(() => {
+    const product = products.find((item) => item._id === productId);
+    if (product) {
+      setProductData(product);
+      setImage(product.image[0]);
+    }
+  }, [productId, products]);
+
+  // Fetch reviews for this product
+  const fetchReviews = async () => {
+    try {
+      const res = await axios.post(`${backendUrl}/api/customerReview/getReview`,{productId});
+      if (res.data.success) {
+        setReviews(res.data.data);
+        setAvgRating(res.data.average);
       }
-    });
+    } catch (err) {
+      console.error("❌ Error fetching reviews:", err);
+    }
   };
 
   useEffect(() => {
-    fetchProductData();
+    fetchReviews();
   }, [productId]);
+
+  // Handle Add Review
+  const handleAddReview = async () => {
+    if (!userName || !userEmail || !userReview || userStar === 0) {
+      toast.error("Please fill all fields and give a star rating!");
+      return;
+    }
+
+    try {
+      const res = await axios.post(`${backendUrl}/api/customerReview/add`, {
+        name: userName,
+        email: userEmail,
+        review: userReview,
+        star: userStar,
+        productId
+      });
+
+      if (res.data.success) {
+        toast.success("Review added successfully!");
+        setUserName('');
+        setUserEmail('');
+        setUserReview('');
+        setUserStar(0);
+        fetchReviews(); // refresh review list
+      } else {
+        toast.error(res.data.message || "Failed to add review");
+      }
+    } catch (err) {
+      toast.error("Error adding review");
+      console.error(err);
+    }
+  };
 
   return productData ? (
     <div className='border-t-2 pt-10 transition-opacity ease-in duration-50 opacity-100'>
@@ -33,16 +88,16 @@ const Product = () => {
           <div className='flex sm:flex-col overflow-x-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full'>
             {productData.image.map((item, index) => (
               <img
-               onMouseEnter={() => setImage(item)}
+                onMouseEnter={() => setImage(item)}
                 src={item}
                 key={index}
                 className='w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer'
-                alt=""
+                alt=''
               />
             ))}
           </div>
-          <div className='w-full sm:w-[80%] '>
-            <img className='w-full h-auto' src={image} alt="" />
+          <div className='w-full sm:w-[80%]'>
+            <img className='w-full h-auto' src={image} alt='' />
           </div>
         </div>
 
@@ -50,15 +105,21 @@ const Product = () => {
         <div className='flex-1'>
           <h1 className='font-medium text-2xl mt-2'>{productData.name}</h1>
           <div className='flex items-center gap-1 mt-2'>
-            <img src={assets.star_icon} alt="" className='w-3 5' />
-            <img src={assets.star_icon} alt="" className='w-3 5' />
-            <img src={assets.star_icon} alt="" className='w-3 5' />
-            <img src={assets.star_icon} alt="" className='w-3 5' />
-            <img src={assets.star_dull_icon} alt="" className='w-3 5' />
-            <p className='pl-2'>(122)</p>
+            {[...Array(5)].map((_, i) => (
+              <img
+                key={i}
+                src={i < avgRating ? assets.star_icon : assets.star_dull_icon}
+                alt=''
+                className='w-3.5'
+              />
+            ))}
+            <p className='pl-2 text-gray-500'>({reviews.length})</p>
           </div>
 
-          <p className='mt-5 text-3xl font-medium'>{currency}{productData.price}</p>
+          <p className='mt-5 text-3xl font-medium'>
+            {currency}
+            {productData.price}
+          </p>
           <p className='mt-5 text-gray-500 md:w-4/5'>{productData.description}</p>
 
           <div className='flex flex-col gap-4 my-8'>
@@ -76,12 +137,13 @@ const Product = () => {
             </div>
           </div>
 
-          <button onClick={()=>addToCart(productData._id,size)}  className='bg-black text-white px-8 py-3 text-sm active:bg-gray-700'>
+          <button
+            onClick={() => addToCart(productData._id, size)}
+            className='bg-black text-white px-8 py-3 text-sm active:bg-gray-700'
+          >
             ADD TO CART
           </button>
-          {
-            console.log(size)
-          } 
+
           <hr className='mt-8 sm:w-4/5' />
           <div className='text-sm text-gray-500 mt-5 flex-col gap-1'>
             <p>100% Original Product</p>
@@ -93,13 +155,79 @@ const Product = () => {
 
       {/* Description & Review Section */}
       <div className='mt-20'>
-        <div className='flex'>
-          <b className='border px-5 py-3 text-sm'>Description</b>
-          <p className='border px-5 py-3 text-sm'>Reviews (122)</p>
+        <div className='flex border-b'>
+          
+          <b className='border-t border-r px-5 py-3 text-sm'>Reviews ({reviews.length})</b>
         </div>
-        <div className='flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500'>
-          <p>Lorem ipsum dolor sit amet consectetur adipisicing elit...</p>
-          <p>Pariatur error corporis expedita, aliquid, omnis quidem tempore...</p>
+
+        {/* Review List */}
+        <div className='flex flex-col gap-6 border px-6 py-6 text-sm text-gray-700'>
+          {reviews.length > 0 ? (
+            reviews.map((r) => (
+              <div key={r._id} className='border-b pb-4'>
+                <div className='flex items-center gap-2'>
+                  {[...Array(5)].map((_, i) => (
+                    <img
+                      key={i}
+                      src={i < r.star ? assets.star_icon : assets.star_dull_icon}
+                      alt=''
+                      className='w-3.5'
+                    />
+                  ))}
+                  <p className='font-medium ml-2'>{r.name}</p>
+                </div>
+                <p className='text-gray-500 mt-1'>{r.review}</p>
+              </div>
+            ))
+          ) : (
+            <p className='text-gray-400'>No reviews yet. Be the first to review!</p>
+          )}
+        </div>
+
+        {/* Add Review Form */}
+        <div className='mt-10 border px-6 py-6 bg-gray-50 rounded-lg'>
+          <h2 className='font-semibold mb-4'>Write a Review</h2>
+          <div className='flex flex-col gap-3'>
+            <input
+              type='text'
+              placeholder='Your Name'
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              className='border p-2 rounded'
+            />
+            <input
+              type='email'
+              placeholder='Your Email'
+              value={userEmail}
+              onChange={(e) => setUserEmail(e.target.value)}
+              className='border p-2 rounded'
+            />
+            <textarea
+              placeholder='Your Review...'
+              value={userReview}
+              onChange={(e) => setUserReview(e.target.value)}
+              className='border p-2 rounded'
+            ></textarea>
+
+            <div className='flex gap-2'>
+              {[1, 2, 3, 4, 5].map((num) => (
+                <img
+                  key={num}
+                  src={num <= userStar ? assets.star_icon : assets.star_dull_icon}
+                  alt=''
+                  className='w-5 cursor-pointer'
+                  onClick={() => setUserStar(num)}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={handleAddReview}
+              className='bg-black text-white px-6 py-2 text-sm mt-3 rounded hover:bg-gray-800'
+            >
+              Submit Review
+            </button>
+          </div>
         </div>
       </div>
 
