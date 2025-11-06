@@ -5,11 +5,11 @@ import { ShopContext } from '../context/shopContext'
 import axios from 'axios'
 
 const Navbar = () => {
-
   const [visible, setVisible] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
-const email = localStorage.getItem('email');
+  const email = localStorage.getItem('email');
+
   const { setShowSearch, getCartCount, navigate, token, setToken, setCartItems, saveCartToDB, logOut, status, setStatus, backendUrl } = useContext(ShopContext);
 
   useEffect(() => {
@@ -21,7 +21,7 @@ const email = localStorage.getItem('email');
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.post(`${backendUrl}/api/notification/get`,{email} ,{
+      const res = await axios.post(`${backendUrl}/api/notification/get`, { email }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -40,6 +40,22 @@ const email = localStorage.getItem('email');
     link.click();
   };
 
+  // ✅ Remove notification handler
+  const handleRemoveNotification = async (id) => {
+    try {
+      const res = await axios.post(`${backendUrl}/api/notification/delete`,{id}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.success) {
+        // Remove notification from local state
+        setNotifications(notifications.filter(n => n._id !== id));
+      }
+    } catch (error) {
+      console.log("Error removing notification:", error.message);
+    }
+  };
+
   return (
     <div className='flex items-center justify-between py-5 font-medium relative'>
       <Link to='/'>
@@ -48,27 +64,14 @@ const email = localStorage.getItem('email');
 
       {/* ---------- Center Nav Links ---------- */}
       <ul className='hidden sm:flex gap-5 text-sm text-gray-700'>
-        <NavLink to='/' className="flex flex-col items-center gap-1">
-          <p>Home</p>
-          <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
-        </NavLink>
-        <NavLink to='/collection' className="flex flex-col items-center gap-1">
-          <p>Collection</p>
-          <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
-        </NavLink>
-        <NavLink to='/about' className="flex flex-col items-center gap-1">
-          <p>About</p>
-          <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
-        </NavLink>
-        <NavLink to='/contact' className="flex flex-col items-center gap-1">
-          <p>Contact</p>
-          <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
-        </NavLink>
+        <NavLink to='/' className="flex flex-col items-center gap-1"><p>Home</p></NavLink>
+        <NavLink to='/collection' className="flex flex-col items-center gap-1"><p>Collection</p></NavLink>
+        <NavLink to='/about' className="flex flex-col items-center gap-1"><p>About</p></NavLink>
+        <NavLink to='/contact' className="flex flex-col items-center gap-1"><p>Contact</p></NavLink>
       </ul>
 
       {/* ---------- Right Section ---------- */}
       <div className='flex items-center gap-6'>
-
         {/* Search */}
         <img onClick={() => setShowSearch(true)} src={assets.search_icon} className='w-5 cursor-pointer' />
 
@@ -91,11 +94,11 @@ const email = localStorage.getItem('email');
               <div className='p-3 text-sm text-gray-700 font-semibold border-b'>Notifications</div>
               <div className='max-h-72 overflow-y-auto'>
                 {notifications.length > 0 ? (
-                  notifications.map((n, i) => (
-                    <div key={i} className='p-3 border-b hover:bg-gray-50'>
+                  notifications.map((n) => (
+                    <div key={n._id} className='p-3 border-b hover:bg-gray-50 flex flex-col gap-1'>
                       <p className='text-gray-700 text-sm'>{n.message}</p>
                       {n.invoicePdf && (
-                        <div className='flex justify-between items-center mt-2 text-xs'>
+                        <div className='flex justify-between items-center mt-1 text-xs'>
                           <a
                             href={n.invoicePdf}
                             target='_blank'
@@ -112,6 +115,12 @@ const email = localStorage.getItem('email');
                           </button>
                         </div>
                       )}
+                      <button
+                        onClick={() => handleRemoveNotification(n._id)}
+                        className='self-end text-red-500 text-xs hover:underline'
+                      >
+                        Remove
+                      </button>
                     </div>
                   ))
                 ) : (
@@ -125,16 +134,12 @@ const email = localStorage.getItem('email');
         {/* Profile */}
         <div className='group relative'>
           <img className='w-5 cursor-pointer' src={assets.profile_icon} alt='' />
-
           <div className='group-hover:block hidden absolute dropdown-menu right-0 pt-4'>
             <div className='flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-500 rounded'>
               <Link to='/profile'><p className='cursor-pointer hover:text-black'>My Profile</p></Link>
               <p onClick={() => navigate('/orders')} className='cursor-pointer hover:text-black'>Orders</p>
               <Link to='/login'>
-                <p onClick={async (e) => {
-                  e.preventDefault();
-                  await logOut();
-                }} className='cursor-pointer hover:text-black'>{status}</p>
+                <p onClick={async (e) => { e.preventDefault(); await logOut(); }} className='cursor-pointer hover:text-black'>{status}</p>
               </Link>
             </div>
           </div>

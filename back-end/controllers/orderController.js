@@ -5,6 +5,10 @@ import fs  from "fs";
 import PDFDocument from "pdfkit";
 import Notification from "../models/notificationModel.js";
 import path from "path";
+import { v2 as cloudinary } from "cloudinary";
+import { Readable } from "stream";
+import { PassThrough } from "stream";
+import fetch from "node-fetch";
 
 //global vars
 const currency = 'inr'
@@ -217,71 +221,91 @@ const updateStatus = async (req, res) => {
 
     // If delivered or cancelled → Generate PDF + Notification
     if (status === "Delivered" || status === "Cancelled") {
-      // ✅ Create invoices directory
-      const invoiceDir = path.resolve("./invoices");
-      if (!fs.existsSync(invoiceDir)) fs.mkdirSync(invoiceDir);
-// ✅ Generate PDF invoice (clean layout)
-const filename = `invoice_${orderId}.pdf`;
-const filePath = path.join(invoiceDir, filename);
+      // ✅ Create PDF in memory
+      const doc = new PDFDocument({ margin: 50 });
+      const chunks = [];
 
-const doc = new PDFDocument({ margin: 50 });
-const writeStream = fs.createWriteStream(filePath);
-doc.pipe(writeStream);
+      const pdfBufferPromise = new Promise((resolve, reject) => {
+        doc.on("data", (chunk) => chunks.push(chunk));
+        doc.on("end", () => resolve(Buffer.concat(chunks)));
+        doc.on("error", (err) => reject(err));
+      });
 
-// ===== Header =====
-doc
-  .fontSize(24)
-  .font("Helvetica-Bold")
-  .text("INVOICE", { align: "center" })
-  .moveDown(1.5);
+      // ===== Header =====
+      doc
+        .fontSize(24)
+        .font("Helvetica-Bold")
+        .text("INVOICE", { align: "center" })
+        .moveDown(1.5);
 
-// ===== Order Details =====
-doc
-  .fontSize(12)
-  .font("Helvetica")
-  .text(`Order ID: ${orderId}`)
-  .text(`Date: ${new Date().toLocaleString()}`)
-  .text(`Status: ${status}`)
-  .moveDown(1);
+      // ===== Order Details =====
+      doc
+        .fontSize(12)
+        .font("Helvetica")
+        .text(`Order ID: ${orderId}`)
+        .text(`Date: ${new Date().toLocaleString()}`)
+        .text(`Status: ${status}`)
+        .moveDown(1);
 
-// ===== Customer Details =====
-doc
-  .font("Helvetica-Bold")
-  .text("Customer Information:", { underline: true })
-  .moveDown(0.5)
-  .font("Helvetica")
-  .text(`Customer Email: ${order.email || "N/A"}`)
-  .moveDown(1);
+      // ===== Customer Details =====
+      doc
+        .font("Helvetica-Bold")
+        .text("Customer Information:", { underline: true })
+        .moveDown(0.5)
+        .font("Helvetica")
+        .text(`Customer Email: ${order.email || "N/A"}`)
+        .moveDown(1);
 
-// ===== Items List =====
-doc.font("Helvetica-Bold").text("Items:", { underline: true }).moveDown(0.5);
-doc.font("Helvetica");
+      // ===== Items =====
+      doc.font("Helvetica-Bold").text("Items:", { underline: true }).moveDown(0.5);
+      doc.font("Helvetica");
+      order.items.forEach((item, index) => {
+        doc.text(
+          `${index + 1}. ${item.name} (${item.size || "-"}) × ${item.quantity} — ${item.price}`,
+          { indent: 20 }
+        );
+      });
 
-order.items.forEach((item, index) => {
-  doc.text(
-    `${index + 1}. ${item.name} (${item.size || "-"}) × ${item.quantity} — ${"$"+item.price}`,
-    { indent: 20 }
-  );
-});
+      // ===== Total =====
+      doc.moveDown(1);
+      doc
+        .font("Helvetica-Bold")
+        .text(`Total Amount: ${order.amount}`, { align: "right" })
+        .moveDown(2);
 
-// ===== Total =====
-doc.moveDown(1);
-doc
-  .font("Helvetica-Bold")
-  .text(`Total Amount: ${"$"+order.amount}`, { align: "right" })
-  .moveDown(2);
+      // ===== Footer =====
+      doc
+        .fontSize(10)
+        .font("Helvetica-Oblique")
+        .text("Thank you for shopping with FOREVER!", { align: "center" });
 
-// ===== Footer =====
-doc
-  .fontSize(10)
-  .font("Helvetica-Oblique")
-  .text("Thank you for shopping with FOREVER!", { align: "center" });
+      doc.end();
 
-// End PDF
-doc.end();
+      // ✅ Wait for PDF buffer
+      const pdfBuffer = await pdfBufferPromise;
+      console.log("📄 PDF Buffer Size:", pdfBuffer.length);
 
-// Wait for file write completion
-await new Promise((resolve) => writeStream.on("finish", resolve));
+      // ✅ Upload to Upload.io
+      const uploadResponse = await fetch(
+        `https://api.upload.io/v2/accounts/G22nj2X/uploads/binary`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer public_G22nj2X6EghU63soGwJ6QiCwdcPk",
+            "Content-Type": "application/pdf",
+          },
+          body: pdfBuffer,
+        }
+      );
+
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        throw new Error(`Upload.io upload failed: ${errorText}`);
+      }
+
+      const uploadData = await uploadResponse.json();
+      const pdfUrl = uploadData.fileUrl; // ✅ Publicly accessible URL
+      console.log("✅ Invoice uploaded:", pdfUrl);
 
       // ✅ Create Notification
       const message =
@@ -294,26 +318,21 @@ await new Promise((resolve) => writeStream.on("finish", resolve));
         orderId,
         message,
         type: status === "Delivered" ? "success" : "error",
-        invoicePdf: `${backendUrl}/invoices/${filename}`,
+        invoicePdf: pdfUrl, // Working PDF link
       });
 
-      // ✅ Delete order if cancelled
-    
+      // ✅ Update/Delete order
+      if (status === "Cancelled") {
         await orderModel.findByIdAndDelete(orderId);
-        // res.json({
-        //   status: true,
-        //   message: "Order cancelled and deleted successfully.",
-        // });
-      
-
-      // ✅ Update to Delivered
-      order.status = status;
-      await order.save();
+      } else {
+        order.status = status;
+        await order.save();
+      }
 
       return res.json({
         status: true,
-        message: "Order delivered and invoice generated successfully.",
-        invoice: `/invoices/${filename}`,
+        message: `Order ${status.toLowerCase()} and invoice uploaded successfully.`,
+        invoice: pdfUrl,
       });
     }
 
@@ -330,13 +349,14 @@ await new Promise((resolve) => writeStream.on("finish", resolve));
       order: updatedOrder,
     });
   } catch (err) {
-    console.error("Error updating order status:", err);
+    console.error("❌ Error updating order status:", err);
     res.status(500).json({
       status: false,
       message: err.message || "Internal Server Error",
     });
   }
 };
+
 
 
 

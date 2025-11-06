@@ -12,4 +12,17 @@ const getnotification = async(req,res)=>{
  }
 }
 
-export {getnotification};
+const deleteNotification = async(req,res)=>{
+      try{
+        const {id} = req.body;
+        const data = await Notification.findByIdAndDelete(id);
+         res.json({"success":true,"message":"notification deleted successfully"});
+      }catch(err){
+             console.log(err);
+             
+            res.json({"success":false,"message":err.message});
+
+      }
+}
+
+export {getnotification,deleteNotification};
