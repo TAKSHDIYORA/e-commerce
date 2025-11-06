@@ -1,44 +1,76 @@
-import React from 'react'
-import { assets } from '../assets/frontend_assets/assets'
+"use client"
 
-const footer = () => {
+import { useContext } from "react"
+import { assets } from "../assets/frontend_assets/assets"
+import { ThemeContext } from "../context/themeContext"
+
+const Footer = () => {
+  const { isDarkMode } = useContext(ThemeContext)
+
   return (
-    <div>
-       <div className='flex flex-col sm:grid grid-cols-[3fr_1fr_1fr] gap-14 my-10 mt-40 text-sm'>
-       
-         <div>
-             <img src={assets.logo} className='mb-5 w-32' alt="" />
-             <p className='w-full md:w-2/3 text-gray-600'>
-             Lorem ipsum dolor sit amet, consectetur adipisicing elit. Vitae quos totam aut quia. Fuga quod tempore, non in quis consectetur numquam eaque atque tempora facere, eos maxime nemo dignissimos est sint fugit, praesentium neque. Omnis ipsa porro repellat id molestiae dolor autem delectus quibusdam nobis sapiente voluptate consequuntur, natus voluptatem, quod facere pariatur? Accusamus repellat numquam, deserunt dolorum exercitationem dignissimos.
-            </p> 
+    <footer style={{ backgroundColor: "var(--bg-secondary)", color: "var(--text-secondary)" }}>
+      <div className="px-4 sm:px-8 py-16">
+        <div className="flex flex-col sm:grid grid-cols-[2fr_1fr_1fr_1fr] gap-8 sm:gap-16 mb-12">
+          {/* Brand Column */}
+          <div>
+            <img src={assets.logo || "/placeholder.svg"} className="mb-6 w-28 sm:w-32" alt="Logo" />
+            <p className="text-xs sm:text-sm leading-relaxed font-light" style={{ color: "var(--text-light)" }}>
+              Elevate your style with our curated collection of premium products. We're committed to delivering
+              exceptional quality and outstanding customer service.
+            </p>
           </div>
 
+          {/* Company Column */}
           <div>
-             <p className='text-xl font-medium mb-5'>COMPANY</p>
-            <ul className='flex flex-col gap-1 text-gray-600'>
-                 <li>Home</li>
-                 <li>About Us</li>
-                 <li>Delivery</li>
-                 <li>Privacy Policy</li>
+            <p className="text-xs uppercase font-semibold tracking-wider mb-6" style={{ color: "var(--text-primary)" }}>
+              Company
+            </p>
+            <ul className="flex flex-col gap-3 text-xs sm:text-sm font-light">
+              <li className="cursor-pointer hover:opacity-60 transition">Home</li>
+              <li className="cursor-pointer hover:opacity-60 transition">About Us</li>
+              <li className="cursor-pointer hover:opacity-60 transition">Delivery</li>
+              <li className="cursor-pointer hover:opacity-60 transition">Privacy Policy</li>
             </ul>
           </div>
-         
-         <div>
-            <p className='text-xl font-medium mb-5'>GET IN TOUCH</p>
-            <ul className='flex flex-col gap-1 text-gray-600'>
-                    <li>+1-212-456-7890</li>
-                    <li>abc@forever.com</li>
+
+          {/* Support Column */}
+          <div>
+            <p className="text-xs uppercase font-semibold tracking-wider mb-6" style={{ color: "var(--text-primary)" }}>
+              Support
+            </p>
+            <ul className="flex flex-col gap-3 text-xs sm:text-sm font-light">
+              <li className="cursor-pointer hover:opacity-60 transition">Help Center</li>
+              <li className="cursor-pointer hover:opacity-60 transition">Track Order</li>
+              <li className="cursor-pointer hover:opacity-60 transition">Returns</li>
+              <li className="cursor-pointer hover:opacity-60 transition">FAQ</li>
             </ul>
-         </div>
-       </div>
-       <div>
-          <hr />
-          <p className='py-5 text-sm text-center'>
-                Copyright 2025@ forever.com - All Right Reserved
+          </div>
+
+          {/* Contact Column */}
+          <div>
+            <p className="text-xs uppercase font-semibold tracking-wider mb-6" style={{ color: "var(--text-primary)" }}>
+              Get In Touch
+            </p>
+            <ul className="flex flex-col gap-3 text-xs sm:text-sm font-light">
+              <li className="hover:opacity-60 transition">+1 (212) 456-7890</li>
+              <li className="hover:opacity-60 transition">support@forever.com</li>
+              <li className="hover:opacity-60 transition">Mon - Fri: 9AM - 6PM EST</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="my-8" style={{ borderTopColor: "var(--border-color)", borderTopWidth: "1px" }}></div>
+
+        {/* Copyright */}
+        <div className="text-center">
+          <p className="text-xs sm:text-sm font-light" style={{ color: "var(--text-muted)" }}>
+            © 2025 Forever.com - All Rights Reserved. Designed for modern living.
           </p>
-       </div>
-    </div>
+        </div>
+      </div>
+    </footer>
   )
 }
 
-export default footer
+export default Footer
