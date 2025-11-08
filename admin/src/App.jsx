@@ -8,6 +8,7 @@ import { Routes,Route } from 'react-router-dom'
  import Login from './components/login'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import CustomerService from './pages/customerService'
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 export const currency = '$';
@@ -37,6 +38,7 @@ useEffect(()=>{
                   <Route path='/add' element={<Add token={token}/>} />
                   <Route path='/list' element={<List token={token}/>} />
                   <Route path='/orders' element={<Orders token={token}/>} />
+                  <Route path='/customerService' element={<CustomerService/>}/>
                 </Routes> 
            </div>
         </div>

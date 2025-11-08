@@ -8,7 +8,7 @@ import Footer from '../components/Footer';
 const Login = () => {
 
   const [currentState, setCurrentState] = useState('Sign Up');
-  const { token, setToken, navigate, backendUrl, fetchCartFromDB } = useContext(ShopContext);
+  const { token, setToken, navigate, backendUrl, fetchCartFromDB,setUserId ,userId} = useContext(ShopContext);
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
@@ -27,6 +27,7 @@ const Login = () => {
           localStorage.setItem('email', email);
           // setToken(response.data.token);
           localStorage.setItem('tempToken',response.data.token);
+          setUserId(response.data.userId);
 
           // Show loader for 2 seconds before redirecting
           setTimeout(() => {
@@ -39,11 +40,18 @@ const Login = () => {
       } else {
         // API call for login
         const response = await axios.post(`${backendUrl}/api/user/login`, { email, password });
-
+  console.log(response.data);
+  
         if (response.data.status) {
           setToken(response.data.token);
           localStorage.setItem('token', response.data.token);
           localStorage.setItem('email', email);
+           setUserId(response.data.userId);
+          //  console.log(userId);
+           
+                     localStorage.setItem('userId',userId);
+
+
           await fetchCartFromDB(email);
           navigate('/');
         } else {

@@ -18,6 +18,7 @@ const ShopContextProvider =
     const [token,setToken] = useState('');
     const [verEmail,setVerEmail] = useState(false);
      const [status,setStatus] = useState("sign-in");
+     const [userId,setUserId] = useState("");
     const navigate = useNavigate();
 
      useEffect(() => {
@@ -183,8 +184,12 @@ const logOut =  async() =>{
     // const email = localStorage.getItem("email");
 if(status ==='log-Out'){
     localStorage.removeItem('cartItems');
+       
      setCartItems({});
      setStatus("sign-in")
+      localStorage.removeItem('userId');
+      setUserId("");
+     
 }
 
    await saveCartToDB();
@@ -217,7 +222,8 @@ if(status ==='log-Out'){
         fetchCartFromDB,
         saveCartToDB,
         verEmail,setVerEmail,logOut,
-        status,setStatus
+        status,setStatus,
+        userId,setUserId
     }
     return (
         <ShopContext.Provider value={value}>

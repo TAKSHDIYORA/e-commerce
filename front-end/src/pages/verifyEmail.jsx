@@ -9,7 +9,7 @@ const VerifyEmail = () => {
   const [otp, setOtp] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | success | error
   const [message, setMessage] = useState("");
-  const {backendUrl,logOut, fetchCartFromDB,token,setToken,navigate} = useContext(ShopContext);
+  const {backendUrl,logOut, fetchCartFromDB,token,setToken,navigate,userId} = useContext(ShopContext);
   const email = localStorage.getItem('email');
 
   const handleVerify = async () => {
@@ -28,6 +28,7 @@ const VerifyEmail = () => {
         setToken(tmptoken);
         localStorage.removeItem('tempToken');
           localStorage.setItem('token',token);
+          localStorage.setItem('userId',userId);
                  
                 await fetchCartFromDB(email);
 

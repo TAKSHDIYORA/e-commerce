@@ -34,7 +34,7 @@ const loginUser = async(req,res)=>{
         const isMatch = await bcrypt.compare(password,user.password);
      if(isMatch){
               const token = createToken(user._id);
-              res.json({"status" : true,username,token});
+              res.json({"status" : true,username,token,"userId":user._id});
      }else{ 
 
            res.json({"status":false,"message":"password is incorrect"})
@@ -127,7 +127,7 @@ await transporter.sendMail({
 
 
 
-      res.json({"success" : true,token})
+      res.json({"success" : true,token,"userId":user._id});
       
      }catch(err){
        console.log(err);
