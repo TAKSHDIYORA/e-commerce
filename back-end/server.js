@@ -69,6 +69,9 @@ io.on('connection', (socket) => {
 
   // When a user starts chat
   socket.on('start_chat', async ({ userId }) => {
+    if(!userId){
+      return ;
+    }
    let session = await ChatSession.findOne({ userId });
 if (!session) session = await ChatSession.create({ userId });
 
