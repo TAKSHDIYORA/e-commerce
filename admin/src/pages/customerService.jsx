@@ -134,7 +134,9 @@ socket.off("chat_closed");
                 key={cust._id}
                 className="p-2 border-b flex justify-between items-center"
               >
-               <span>{cust.userId}</span> 
+                {
+                    (cust.userId=== "690f17807fe405fe0c304e44") ?   <span>{cust.userId}</span> :  <span>guest</span>
+                }
                
                 <button
                   onClick={() => joinChat(cust._id)}

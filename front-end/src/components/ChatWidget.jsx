@@ -36,7 +36,6 @@ const ChatWidget = ({ userId }) => {
     // 🚫 Chat closed by admin
     socket.on("chat_closed", () => {
       alert("Admin has closed the chat.");
-      localStorage.removeItem("chat_sessionId")
       setChatStarted(false);
       setAdminIn(false);
       setSessionId(null);

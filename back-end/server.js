@@ -17,6 +17,8 @@ import { Server } from "socket.io";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const { instrument } = require("@socket.io/admin-ui");
+import mongoose from "mongoose";
+
 
 // ------------------------
 const app = express();
@@ -69,9 +71,9 @@ io.on('connection', (socket) => {
 
   // When a user starts chat
   socket.on('start_chat', async ({ userId }) => {
-    if(!userId){
-      return ;
-    }
+   if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    userId = new mongoose.Types.ObjectId(); // temporary guest ID
+  }
    let session = await ChatSession.findOne({ userId });
 if (!session) session = await ChatSession.create({ userId });
 

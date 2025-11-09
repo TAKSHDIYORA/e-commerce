@@ -8,15 +8,15 @@ import ChatWidget from '../components/ChatWidget'
 import { ShopContext } from '../context/shopContext'
 
 const home = () => {
-  let {userId,token} = useContext(ShopContext);
- 
+  let {userId} = useContext(ShopContext);
+  if(!userId){
+    userId = "690f17807fe405fe0c304e44"
+  }
   return (
     <div>
-      <Hero/>{}
-{ token ?
+      <Hero/>
+     
        <ChatWidget userId={`${userId}`}/> 
-       : <></>
-}
       <LatestCollection />
       <BestSeller />
       <OurPolicy/>
